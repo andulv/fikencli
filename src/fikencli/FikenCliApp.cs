@@ -14,16 +14,7 @@ public sealed class FikenCliApp
         _error = error;
         var transport = new FikenTransport(httpClient, tokenProvider);
         _rootCommand = new RootCommand("Direct, machine-oriented access to the Fiken API v2.");
-
-        var user = new Command("user", "Operations for the authenticated Fiken user.");
-        user.Subcommands.Add(FikenCommandFactory.CreateGetCommand(
-            "get",
-            "Get the authenticated user (GET /user).",
-            _ => "user",
-            transport,
-            output,
-            error));
-        _rootCommand.Subcommands.Add(user);
+        FikenReadCommands.AddTo(_rootCommand, transport, output, error);
     }
 
     public async Task<int> InvokeAsync(string[] args, CancellationToken cancellationToken = default)
