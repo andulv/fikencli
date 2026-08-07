@@ -11,6 +11,9 @@ public sealed class FikenTransport(
 {
     public static readonly Uri DefaultBaseAddress = new("https://api.fiken.no/api/v2/");
 
+    public void Authorize(HttpMethod method, string relativePath) =>
+        (requestPolicy ?? AllowAllFikenRequestPolicy.Instance).Authorize(method, relativePath);
+
     public async Task<int> SendAsync(
         HttpMethod method,
         string relativePath,
@@ -19,7 +22,7 @@ public sealed class FikenTransport(
         TextWriter error,
         CancellationToken cancellationToken)
     {
-        (requestPolicy ?? AllowAllFikenRequestPolicy.Instance).Authorize(method, relativePath);
+        Authorize(method, relativePath);
 
         var token = tokenProvider();
         if (string.IsNullOrWhiteSpace(token))

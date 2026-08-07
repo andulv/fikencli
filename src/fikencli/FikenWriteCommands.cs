@@ -52,12 +52,13 @@ public static class FikenWriteCommands
                 return 2;
             }
 
+            var path = $"companies/{Uri.EscapeDataString(parseResult.GetValue(companySlug)!)}/generalJournalEntries";
+            transport.Authorize(HttpMethod.Post, path);
             var raw = file is not null
                 ? await File.ReadAllTextAsync(file.FullName, cancellationToken)
                 : await input.ReadToEndAsync(cancellationToken);
             var payload = ParsePayload(raw);
             var compactPayload = JsonSerializer.Serialize(payload);
-            var path = $"companies/{Uri.EscapeDataString(parseResult.GetValue(companySlug)!)}/generalJournalEntries";
 
             if (!parseResult.GetValue(execute))
             {

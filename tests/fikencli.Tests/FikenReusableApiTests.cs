@@ -39,7 +39,7 @@ public sealed class FikenReusableApiTests
     }
 
     [Fact]
-    public async Task GetOnlyPolicy_PermitsWritePreviewBecauseItSendsNoRequest()
+    public async Task GetOnlyPolicy_RejectsWritePreviewBecauseItIsAWriteOperation()
     {
         var handler = new RecordingHandler();
         var output = new StringWriter();
@@ -48,10 +48,10 @@ public sealed class FikenReusableApiTests
 
         var exitCode = await app.InvokeAsync("general-journal-entries create --company-slug demo --stdin");
 
-        Assert.Equal(0, exitCode);
+        Assert.Equal(3, exitCode);
         Assert.Equal(0, handler.CallCount);
-        Assert.Contains("\"method\":\"POST\"", output.ToString());
-        Assert.Empty(error.ToString());
+        Assert.Empty(output.ToString());
+        Assert.Contains("not permitted", error.ToString());
     }
 
     private static FikenCliApp CreateApp(
