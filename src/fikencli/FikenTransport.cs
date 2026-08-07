@@ -4,7 +4,10 @@ using System.Text.Json;
 
 namespace FikenCli;
 
-public sealed class FikenTransport(HttpClient httpClient, Func<string?> tokenProvider)
+public sealed class FikenTransport(
+    HttpClient httpClient,
+    Func<string?> tokenProvider,
+    IFikenRequestPolicy? requestPolicy = null)
 {
     public static readonly Uri DefaultBaseAddress = new("https://api.fiken.no/api/v2/");
 
@@ -16,6 +19,8 @@ public sealed class FikenTransport(HttpClient httpClient, Func<string?> tokenPro
         TextWriter error,
         CancellationToken cancellationToken)
     {
+        (requestPolicy ?? AllowAllFikenRequestPolicy.Instance).Authorize(method, relativePath);
+
         var token = tokenProvider();
         if (string.IsNullOrWhiteSpace(token))
         {

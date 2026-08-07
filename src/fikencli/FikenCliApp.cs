@@ -8,17 +8,29 @@ public sealed class FikenCliApp
     private readonly TextWriter _output;
     private readonly TextWriter _error;
 
-    public FikenCliApp(HttpClient httpClient, Func<string?> tokenProvider, TextWriter output, TextWriter error, TextReader? input = null)
+    public FikenCliApp(
+        HttpClient httpClient,
+        Func<string?> tokenProvider,
+        TextWriter output,
+        TextWriter error,
+        TextReader? input = null,
+        IFikenRequestPolicy? requestPolicy = null)
     {
         _output = output;
         _error = error;
-        var transport = new FikenTransport(httpClient, tokenProvider);
+        var transport = new FikenTransport(httpClient, tokenProvider, requestPolicy);
         _rootCommand = new RootCommand("Direct, machine-oriented access to the Fiken API v2.");
         FikenReadCommands.AddTo(_rootCommand, transport, output, error);
         FikenWriteCommands.AddTo(_rootCommand, transport, input ?? TextReader.Null, output, error);
     }
 
-    public async Task<int> InvokeAsync(string[] args, CancellationToken cancellationToken = default)
+    public Task<int> InvokeAsync(string commandLine, CancellationToken cancellationToken = default) =>
+        InvokeAsync(_rootCommand.Parse(commandLine), cancellationToken);
+
+    public Task<int> InvokeAsync(string[] args, CancellationToken cancellationToken = default) =>
+        InvokeAsync(_rootCommand.Parse(args), cancellationToken);
+
+    private async Task<int> InvokeAsync(ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -28,7 +40,7 @@ public sealed class FikenCliApp
                 Error = _error,
                 EnableDefaultExceptionHandler = false
             };
-            return await _rootCommand.Parse(args).InvokeAsync(configuration, cancellationToken);
+            return await parseResult.InvokeAsync(configuration, cancellationToken);
         }
         catch (FikenConfigurationException exception)
         {
@@ -39,6 +51,11 @@ public sealed class FikenCliApp
         {
             await WriteExceptionAsync("input", exception.Message);
             return 2;
+        }
+        catch (FikenPolicyException exception)
+        {
+            await WriteExceptionAsync("policy", exception.Message);
+            return 3;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
