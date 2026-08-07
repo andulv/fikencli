@@ -8,3 +8,5 @@
 TestResults/
 .secrets
 .env
+/data/
+
