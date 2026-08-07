@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/fikencli/fikencli.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/fikencli.Tests/fikencli.Tests.csproj" />
+  </Folder>
+</Solution>
