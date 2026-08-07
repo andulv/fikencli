@@ -8,13 +8,14 @@ public sealed class FikenCliApp
     private readonly TextWriter _output;
     private readonly TextWriter _error;
 
-    public FikenCliApp(HttpClient httpClient, Func<string?> tokenProvider, TextWriter output, TextWriter error)
+    public FikenCliApp(HttpClient httpClient, Func<string?> tokenProvider, TextWriter output, TextWriter error, TextReader? input = null)
     {
         _output = output;
         _error = error;
         var transport = new FikenTransport(httpClient, tokenProvider);
         _rootCommand = new RootCommand("Direct, machine-oriented access to the Fiken API v2.");
         FikenReadCommands.AddTo(_rootCommand, transport, output, error);
+        FikenWriteCommands.AddTo(_rootCommand, transport, input ?? TextReader.Null, output, error);
     }
 
     public async Task<int> InvokeAsync(string[] args, CancellationToken cancellationToken = default)
@@ -32,6 +33,11 @@ public sealed class FikenCliApp
         catch (FikenConfigurationException exception)
         {
             await WriteExceptionAsync("configuration", exception.Message);
+            return 2;
+        }
+        catch (FikenInputException exception)
+        {
+            await WriteExceptionAsync("input", exception.Message);
             return 2;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

@@ -9,6 +9,7 @@ var app = new FikenCliApp(
     httpClient,
     () => Environment.GetEnvironmentVariable("FIKEN_API_TOKEN"),
     Console.Out,
-    Console.Error);
+    Console.Error,
+    Console.In);
 
 return await app.InvokeAsync(args);
